@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="uz" class="is-booting">
+  <head>
+        <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    <title>Kabinet | To'yxona</title>
+    <style>
+      .is-booting { overflow: hidden; }
+
+      #boot-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 99999;
+        display: grid;
+        place-items: center;
+        background: #F8FAFC;
+        transition: opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+          visibility 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+
+      #boot-loader.boot-loader--hide {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+      }
+
+      #boot-loader .boot-stage {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 1.75rem;
+      }
+
+      #boot-loader .boot-glow {
+        position: absolute;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        background:
+          radial-gradient(circle, rgba(0, 89, 48, 0.18) 0%, rgba(229, 168, 28, 0.1) 42%, transparent 70%);
+        filter: blur(8px);
+        animation: boot-glow 2.4s ease-in-out infinite;
+        pointer-events: none;
+      }
+
+      #boot-loader .boot-orb {
+        position: relative;
+        width: 150px;
+        height: 150px;
+        display: grid;
+        place-items: center;
+      }
+
+      #boot-loader .boot-ring {
+        position: absolute;
+        inset: 0;
+        border-radius: 50%;
+      }
+
+      #boot-loader .boot-ring--outer {
+        background:
+          conic-gradient(from 0deg, transparent 0%, #005930 28%, transparent 42%, transparent 58%, #E5A81C 78%, transparent 92%);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px));
+        animation: boot-orbit 1.35s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+      }
+
+      #boot-loader .boot-ring--inner {
+        inset: 10px;
+        background:
+          conic-gradient(from 180deg, transparent 0%, rgba(229, 168, 28, 0.85) 22%, transparent 38%, transparent 62%, rgba(0, 89, 48, 0.75) 82%, transparent 96%);
+        mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+        -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 1.5px), #000 calc(100% - 1.5px));
+        animation: boot-orbit-rev 1.9s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+      }
+
+      #boot-loader .boot-core {
+        position: relative;
+        width: 88px;
+        height: 88px;
+        border-radius: 22px;
+        background: #fff;
+        box-shadow:
+          0 1px 0 rgba(255, 255, 255, 0.08) inset,
+          0 10px 28px rgba(15, 23, 42, 0.12),
+          0 0 0 1px rgba(0, 89, 48, 0.12);
+        display: grid;
+        place-items: center;
+        animation: boot-float 2.2s ease-in-out infinite;
+        overflow: hidden;
+      }
+
+      #boot-loader .boot-core img {
+        width: 72px;
+        height: 72px;
+        object-fit: contain;
+        display: block;
+      }
+
+      #boot-loader .boot-brand {
+        display: flex;
+        align-items: baseline;
+        gap: 0;
+        font-family: "Plus Jakarta Sans", Inter, system-ui, sans-serif;
+        font-weight: 800;
+        font-size: 1.375rem;
+        letter-spacing: -0.04em;
+        color: #005930;
+        line-height: 1;
+        animation: boot-brand-in 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+      }
+
+      #boot-loader .boot-dots {
+        display: flex;
+        gap: 6px;
+        margin-top: -0.35rem;
+      }
+
+      #boot-loader .boot-dots i {
+        width: 5px;
+        height: 5px;
+        border-radius: 50%;
+        background: #00A86B;
+        opacity: 0.25;
+        animation: boot-dot 1.2s ease-in-out infinite;
+      }
+
+      #boot-loader .boot-dots i:nth-child(2) {
+        background: #D97706;
+        animation-delay: 0.15s;
+      }
+
+      #boot-loader .boot-dots i:nth-child(3) {
+        animation-delay: 0.3s;
+      }
+
+      @keyframes boot-orbit {
+        to { transform: rotate(360deg); }
+      }
+
+      @keyframes boot-orbit-rev {
+        to { transform: rotate(-360deg); }
+      }
+
+      @keyframes boot-glow {
+        0%, 100% { transform: scale(0.92); opacity: 0.7; }
+        50% { transform: scale(1.08); opacity: 1; }
+      }
+
+      @keyframes boot-float {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+
+      @keyframes boot-heartbeat {
+        0%, 100% { transform: scale(1); }
+        35% { transform: scale(1.08); }
+        50% { transform: scale(0.98); }
+        65% { transform: scale(1.05); }
+      }
+
+      @keyframes boot-twinkle {
+        0%, 100% { transform: rotate(0deg) scale(1); opacity: 1; }
+        50% { transform: rotate(18deg) scale(1.12); opacity: 0.75; }
+      }
+
+      @keyframes boot-brand-in {
+        from { opacity: 0; transform: translateY(8px); filter: blur(4px); }
+        to { opacity: 1; transform: translateY(0); filter: blur(0); }
+      }
+
+      @keyframes boot-dot {
+        0%, 100% { transform: translateY(0); opacity: 0.25; }
+        50% { transform: translateY(-3px); opacity: 1; }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="boot-loader" role="status" aria-live="polite" aria-busy="true" aria-label="Tuyhona">
+      <div class="boot-stage">
+        <div class="boot-glow" aria-hidden="true"></div>
+        <div class="boot-orb" aria-hidden="true">
+          <div class="boot-ring boot-ring--outer"></div>
+          <div class="boot-ring boot-ring--inner"></div>
+          <div class="boot-core">
+            <img src="/logo22.png" alt="Tuyhona" width="72" height="72" />
+          </div>
+        </div>
+        <div class="boot-dots" aria-hidden="true"><i></i><i></i><i></i></div>
+      </div>
+    </div>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>
