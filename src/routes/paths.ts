@@ -1,92 +1,73 @@
 export const paths = {
   home: "/",
-  products: "/products",
-  product: (id: number | string) => `/products/${id}`,
-  store: (slug = "techplus") => `/store/${slug}`,
-  auth: "/auth",
-  cart: "/cart",
-  favorites: "/favorites",
-  account: {
-    root: "/account",
-    orders: "/account/orders",
-    favorites: "/account/favorites",
-    profile: "/account/profile",
-    addresses: "/account/addresses",
-    notifications: "/account/notifications",
-    settings: "/account/settings",
+  auth: "/",
+  owner: {
+    root: "/owner",
+    dashboard: "/owner/dashboard",
+    venues: "/owner/venues",
+    bookings: "/owner/bookings",
+    reviews: "/owner/reviews",
+    settings: "/owner/settings",
   },
-  seller: {
-    root: "/seller",
-    dashboard: "/seller/dashboard",
-    products: "/seller/products",
-    productsNew: "/seller/products/new",
-    productsEdit: (id: number | string) => `/seller/products/${id}/edit`,
-    orders: "/seller/orders",
-    analytics: "/seller/analytics",
-    payments: "/seller/payments",
-    paymentsCheckout: "/seller/payments/checkout",
-    subscription: "/seller/subscription",
-    subscriptionCheckout: "/seller/subscription/checkout",
-    reviews: "/seller/reviews",
-    settings: "/seller/settings",
+  specialist: {
+    root: "/specialist",
+    dashboard: "/specialist/dashboard",
+    profile: "/specialist/profile",
+    reviews: "/specialist/reviews",
+    settings: "/specialist/settings",
   },
   admin: {
     root: "/admin",
     dashboard: "/admin/dashboard",
-    sellers: "/admin/sellers",
-    subscriptions: "/admin/subscriptions",
-    products: "/admin/products",
-    payments: "/admin/payments",
-    analytics: "/admin/analytics",
+    venues: "/admin/venues",
+    specialists: "/admin/specialists",
+    bookings: "/admin/bookings",
+    reviews: "/admin/reviews",
     users: "/admin/users",
     categories: "/admin/categories",
-    orders: "/admin/orders",
-    promotions: "/admin/promotions",
     settings: "/admin/settings",
+  },
+  seller: {
+    root: "/owner",
+    dashboard: "/owner/dashboard",
   },
 } as const;
 
-export const sellerSectionPaths: Record<string, string> = {
-  overview: paths.seller.dashboard,
-  products: paths.seller.products,
-  orders: paths.seller.orders,
-  analytics: paths.seller.analytics,
-  payments: paths.seller.payments,
-  subscription: paths.seller.subscription,
-  reviews: paths.seller.reviews,
-  settings: paths.seller.settings,
+export const ownerSectionPaths: Record<string, string> = {
+  overview: paths.owner.dashboard,
+  venues: paths.owner.venues,
+  bookings: paths.owner.bookings,
+  reviews: paths.owner.reviews,
+  settings: paths.owner.settings,
+};
+
+export const specialistSectionPaths: Record<string, string> = {
+  overview: paths.specialist.dashboard,
+  profile: paths.specialist.profile,
+  reviews: paths.specialist.reviews,
+  settings: paths.specialist.settings,
 };
 
 export const adminSectionPaths: Record<string, string> = {
   overview: paths.admin.dashboard,
-  sellers: paths.admin.sellers,
-  subscriptions: paths.admin.subscriptions,
-  products: paths.admin.products,
-  payments: paths.admin.payments,
-  analytics: paths.admin.analytics,
+  venues: paths.admin.venues,
+  specialists: paths.admin.specialists,
+  bookings: paths.admin.bookings,
+  reviews: paths.admin.reviews,
   users: paths.admin.users,
   categories: paths.admin.categories,
-  orders: paths.admin.orders,
-  promotions: paths.admin.promotions,
   settings: paths.admin.settings,
 };
 
-export const accountSectionPaths: Record<string, string> = {
-  overview: paths.account.root,
-  orders: paths.account.orders,
-  favorites: paths.account.favorites,
-  profile: paths.account.profile,
-  addresses: paths.account.addresses,
-  notifications: paths.account.notifications,
-  settings: paths.account.settings,
-};
+export function getOwnerActiveSection(pathname: string): string {
+  for (const [id, path] of Object.entries(ownerSectionPaths)) {
+    if (pathname === path) return id;
+  }
+  return "overview";
+}
 
-export function getSellerActiveSection(pathname: string): string {
-  if (pathname.includes("/products/new") || /\/products\/\d+\/edit/.test(pathname)) return "products";
-  if (pathname.includes("/payments/checkout")) return "payments";
-  if (pathname.includes("/subscription/checkout")) return "subscription";
-
-  for (const [id, path] of Object.entries(sellerSectionPaths)) {
+export function getSpecialistActiveSection(pathname: string): string {
+  for (const [id, path] of Object.entries(specialistSectionPaths)) {
     if (pathname === path) return id;
   }
   return "overview";
@@ -94,13 +75,6 @@ export function getSellerActiveSection(pathname: string): string {
 
 export function getAdminActiveSection(pathname: string): string {
   for (const [id, path] of Object.entries(adminSectionPaths)) {
-    if (pathname === path) return id;
-  }
-  return "overview";
-}
-
-export function getAccountSection(pathname: string): string {
-  for (const [id, path] of Object.entries(accountSectionPaths)) {
     if (pathname === path) return id;
   }
   return "overview";

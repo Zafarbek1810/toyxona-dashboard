@@ -1,15 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAppContext } from "../../context/AppContext";
-import { mediaUrl } from "../../lib/api/client";
 import { paths } from "../../routes/paths";
 import { storeUrl } from "../../lib/site";
 
 const STATUS_LABEL: Record<string, { label: string; box: string; dot: string }> = {
-  active: { label: "Do'kon faol", box: "bg-green-50 border-green-200 text-green-700", dot: "bg-green-500" },
+  active: { label: "Faol", box: "bg-green-50 border-green-200 text-green-700", dot: "bg-green-500" },
   pending: { label: "Tasdiq kutilmoqda", box: "bg-amber-50 border-amber-200 text-amber-700", dot: "bg-amber-500" },
-  blocked: { label: "Do'kon bloklangan", box: "bg-red-50 border-red-200 text-red-700", dot: "bg-red-500" },
-  suspended: { label: "Do'kon to'xtatilgan", box: "bg-red-50 border-red-200 text-red-700", dot: "bg-red-500" },
+  inactive: { label: "Faol emas", box: "bg-gray-50 border-gray-200 text-gray-600", dot: "bg-gray-400" },
+  blocked: { label: "Bloklangan", box: "bg-red-50 border-red-200 text-red-700", dot: "bg-red-500" },
 };
 
 function personInitials(name: string) {
@@ -49,13 +48,12 @@ export default function SellerHeader() {
     navigate(path);
   };
 
-  const seller = user?.seller;
-  const personName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Sotuvchi";
-  const contact = formatContact(user?.phone || seller?.phone, user?.email || seller?.email);
-  const subtitle = contact || seller?.name || "Sotuvchi";
-  const avatar = mediaUrl(seller?.logo);
-  const plan = (seller?.subscription || seller?.planId || "").toUpperCase();
-  const status = STATUS_LABEL[seller?.status || ""] || STATUS_LABEL.pending;
+  const profile = user?.owner || null;
+  const specialist = user?.specialist || null;
+  const personName = user?.name || [user?.firstName, user?.lastName].filter(Boolean).join(" ") || "Kabinet";
+  const contact = formatContact(profile?.phone || specialist?.phone || user?.phone, profile?.email || user?.email);
+  const subtitle = profile?.name || specialist?.category || contact || "Kabinet";
+  const status = STATUS_LABEL[profile?.status || specialist?.status || ""] || STATUS_LABEL.pending;
 
   return (
     <header className="bg-white border-b shrink-0 px-6 flex items-center gap-4" style={{ borderColor: "var(--border)", height: 60 }}>
@@ -65,7 +63,7 @@ export default function SellerHeader() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
           </svg>
           <input
-            placeholder="Mahsulot, buyurtma qidirish..."
+            placeholder="Bron yoki to'yxona..."
             className="w-full pl-9 pr-4 py-2 border rounded-xl text-sm focus:outline-none focus:border-[#00A86B] focus:ring-1 focus:ring-[#00A86B]/20"
             style={{ borderColor: "var(--border)" }}
           />
@@ -73,18 +71,6 @@ export default function SellerHeader() {
       </div>
 
       <div className="flex items-center gap-2">
-        {plan && (
-          <div className="hidden md:flex items-center gap-1.5 bg-amber-50 border border-amber-200 px-3 py-1.5 rounded-lg">
-            <svg className="w-3.5 h-3.5 text-amber-500" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-            </svg>
-            <span className="text-xs font-bold text-amber-700">{plan}</span>
-            {seller?.daysLeft != null && (
-              <span className="text-xs text-amber-500">· {seller.daysLeft} kun</span>
-            )}
-          </div>
-        )}
-
         <div className={`hidden md:flex items-center gap-1.5 border px-3 py-1.5 rounded-lg ${status.box}`}>
           <span className={`w-2 h-2 rounded-full ${status.dot}`}></span>
           <span className="text-xs font-semibold">{status.label}</span>
@@ -105,17 +91,9 @@ export default function SellerHeader() {
             aria-expanded={menuOpen}
             aria-haspopup="menu"
           >
-            {avatar ? (
-              <img
-                src={avatar}
-                className="w-8 h-8 rounded-full object-cover ring-2 ring-white shadow-sm bg-gray-100"
-                alt=""
-              />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-[#00A86B] text-white text-xs font-bold flex items-center justify-center ring-2 ring-white shadow-sm shrink-0">
-                {personInitials(personName)}
-              </div>
-            )}
+            <div className="w-8 h-8 rounded-full bg-[#00A86B] text-white text-xs font-bold flex items-center justify-center ring-2 ring-white shadow-sm shrink-0">
+              {personInitials(personName)}
+            </div>
             <div className="hidden md:block text-left">
               <p className="text-xs font-semibold text-gray-800 leading-tight">{personName}</p>
               <p className="text-[10px] text-gray-400">{subtitle}</p>
@@ -139,15 +117,15 @@ export default function SellerHeader() {
               <div className="px-3.5 py-2.5 border-b" style={{ borderColor: "var(--border)" }}>
                 <p className="text-xs font-semibold text-gray-800 truncate">{personName}</p>
                 <p className="text-[10px] text-gray-400 truncate">{subtitle}</p>
-                {seller?.name && seller.name !== personName && (
-                  <p className="text-[10px] text-gray-500 truncate mt-0.5">{seller.name}</p>
+                {profile?.name && profile.name !== personName && (
+                  <p className="text-[10px] text-gray-500 truncate mt-0.5">{profile.name}</p>
                 )}
               </div>
 
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => go(paths.seller.settings)}
+                onClick={() => go(user?.role === "specialist" ? paths.specialist.settings : paths.owner.settings)}
                 className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -160,29 +138,16 @@ export default function SellerHeader() {
               <button
                 type="button"
                 role="menuitem"
-                onClick={() => go(paths.seller.subscription)}
-                className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
-                </svg>
-                Obuna
-              </button>
-
-              <button
-                type="button"
-                role="menuitem"
                 onClick={() => {
                   setMenuOpen(false);
-                  const storePath = user?.seller?.slug ? paths.store(user.seller.slug) : paths.home;
-                  window.location.assign(storeUrl(storePath));
+                  window.location.assign(storeUrl("/"));
                 }}
                 className="w-full flex items-center gap-2.5 px-3.5 py-2.5 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
               >
                 <svg className="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                 </svg>
-                Do'konni ko'rish
+                Saytni ochish
               </button>
 
               <div className="my-1 border-t" style={{ borderColor: "var(--border)" }} />

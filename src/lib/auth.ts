@@ -49,18 +49,13 @@ export async function registerAuthUser(input: {
   lastName: string;
   role: AuthRole;
   storeName?: string;
-  businessType?: string;
   city?: string;
   description?: string;
   email?: string;
+  categoryId?: string;
+  district?: string;
+  priceFrom?: number | null;
 }): Promise<AuthUser> {
-  const businessMap: Record<string, string> = {
-    "Jismoniy shaxs": "individual",
-    YaTT: "yatt",
-    MChJ: "mchj",
-    AJ: "aj",
-  };
-
   const data = await authApi.register({
     phone: normalizePhone(input.phone),
     password: input.password,
@@ -68,10 +63,12 @@ export async function registerAuthUser(input: {
     lastName: input.lastName,
     role: input.role === "admin" ? "customer" : input.role,
     storeName: input.storeName,
-    businessType: input.businessType ? businessMap[input.businessType] || "individual" : undefined,
     city: input.city,
     description: input.description,
     email: input.email || undefined,
+    categoryId: input.categoryId,
+    district: input.district,
+    priceFrom: input.priceFrom,
   });
   setToken(data.token);
   writeSession(data.user);
@@ -105,7 +102,8 @@ export async function logout(): Promise<void> {
 }
 
 export function redirectPathForRole(role: AuthRole): string {
-  if (role === "seller") return paths.seller.dashboard;
+  if (role === "seller") return paths.owner.dashboard;
+  if (role === "specialist") return paths.specialist.dashboard;
   if (role === "admin") return paths.admin.dashboard;
   return "/";
 }

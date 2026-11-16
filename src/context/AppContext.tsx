@@ -6,7 +6,6 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { cartApi, favoritesApi } from "../lib/api";
 import { getToken } from "../lib/api/client";
 import {
   getSessionUser,
@@ -73,18 +72,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const refreshCartFav = useCallback(async () => {
-    if (!getToken()) {
-      setCartIds(readLocalIds(LOCAL_CART));
-      setFavIds(readLocalIds(LOCAL_FAV));
-      return;
-    }
-    try {
-      const [cart, favs] = await Promise.all([cartApi.get(), favoritesApi.list()]);
-      setCartIds(cart.items.map((i) => i.productId));
-      setFavIds(favs.map((f) => f.productId));
-    } catch {
-      /* keep previous */
-    }
+    setCartIds([]);
+    setFavIds([]);
   }, []);
 
   const refreshUser = useCallback(async () => {
@@ -127,15 +116,8 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         return;
       }
-      try {
-        const res = await favoritesApi.toggle(id);
-        setFavIds((prev) =>
-          res.favorited ? (prev.includes(id) ? prev : [...prev, id]) : prev.filter((i) => i !== id),
-        );
-        showToast(res.favorited ? "Sevimlilarga qo'shildi" : "Sevimlilardan olib tashlandi");
-      } catch {
-        showToast("Sevimlilarni yangilab bo'lmadi", "error");
-      }
+      showToast("Sevimlilar saytda saqlanadi", "info");
+      void id;
     },
     [showToast],
   );
@@ -152,14 +134,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         });
         return;
       }
-      try {
-        if (cartIds.includes(id)) return;
-        await cartApi.add(id, 1);
-        setCartIds((prev) => (prev.includes(id) ? prev : [...prev, id]));
-        showToast("Savatga qo'shildi ✓");
-      } catch (err) {
-        showToast(err instanceof Error ? err.message : "Savatga qo'shib bo'lmadi", "error");
-      }
+      void id;
     },
     [cartIds, showToast],
   );
@@ -175,13 +150,7 @@ export function AppProvider({ children }: { children: ReactNode }) {
         showToast("Savatdan olib tashlandi", "info");
         return;
       }
-      try {
-        await cartApi.remove(id);
-        setCartIds((prev) => prev.filter((i) => i !== id));
-        showToast("Savatdan olib tashlandi", "info");
-      } catch {
-        showToast("Savatni yangilab bo'lmadi", "error");
-      }
+      void id;
     },
     [showToast],
   );

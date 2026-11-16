@@ -4,6 +4,7 @@ import DocumentTitle from "./components/DocumentTitle";
 import ScrollToTop from "./components/ScrollToTop";
 import AuthPage from "./pages/AuthPage";
 import SellerDashboard from "./pages/SellerDashboard";
+import SpecialistDashboard from "./pages/SpecialistDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import { GuestOnly, RequireRole } from "./routes/guards";
 import { dismissBootLoader } from "./lib/bootLoader";
@@ -28,10 +29,19 @@ export default function App() {
         <Route path="/auth" element={<Navigate to="/" replace />} />
 
         <Route
-          path="/seller/*"
+          path="/owner/*"
           element={
             <RequireRole role="seller">
               <SellerDashboard />
+            </RequireRole>
+          }
+        />
+        <Route path="/seller/*" element={<Navigate to="/owner/dashboard" replace />} />
+        <Route
+          path="/specialist/*"
+          element={
+            <RequireRole role="specialist">
+              <SpecialistDashboard />
             </RequireRole>
           }
         />

@@ -6,16 +6,21 @@ import { paths } from "./paths";
 
 function homeForRole(role: AuthRole): string {
   if (role === "admin") return paths.admin.dashboard;
-  if (role === "seller") return paths.seller.dashboard;
+  if (role === "seller") return paths.owner.dashboard;
+  if (role === "specialist") return paths.specialist.dashboard;
   return "/";
 }
 
-export function RequireRole({ role, children }: { role: "seller" | "admin"; children: ReactNode }) {
+export function RequireRole({
+  role,
+  children,
+}: {
+  role: "seller" | "specialist" | "admin";
+  children: ReactNode;
+}) {
   const { user, authReady } = useAppContext();
   if (!authReady) return null;
-  if (!user || (user.role !== "seller" && user.role !== "admin")) {
-    return <Navigate to="/" replace />;
-  }
+  if (!user || user.role === "customer") return <Navigate to="/" replace />;
   if (user.role !== role) return <Navigate to={homeForRole(user.role)} replace />;
   return children;
 }
@@ -23,7 +28,7 @@ export function RequireRole({ role, children }: { role: "seller" | "admin"; chil
 export function GuestOnly({ children }: { children: ReactNode }) {
   const { user, authReady } = useAppContext();
   if (!authReady) return null;
-  if (user?.role === "seller" || user?.role === "admin") {
+  if (user && user.role !== "customer") {
     return <Navigate to={homeForRole(user.role)} replace />;
   }
   return children;

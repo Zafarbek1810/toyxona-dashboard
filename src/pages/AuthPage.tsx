@@ -13,6 +13,7 @@ import {
 } from "../lib/auth";
 import { paths } from "../routes/paths";
 import { storeUrl } from "../lib/site";
+import { REGIONS } from "../lib/wedding";
 
 const fieldClass =
   "w-full rounded-2xl border border-transparent bg-white px-4 py-3 text-sm text-[#10231c] shadow-[0_1px_2px_rgba(15,23,42,0.04)] outline-none transition duration-200 placeholder:text-gray-400 focus:border-[#00A86B] focus:shadow-[0_0_0_4px_rgba(0,168,107,0.12)]";
@@ -146,7 +147,8 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "register" | "forgot">(
     searchParams.get("register") === "1" ? "register" : "login",
   );
-  const role: AuthRole = "seller";
+  const [accountKind, setAccountKind] = useState<AuthRole>("seller");
+  const [categoryId, setCategoryId] = useState("host");
   const [step, setStep] = useState(1);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -160,8 +162,7 @@ export default function AuthPage() {
   const [registerPassword, setRegisterPassword] = useState("");
 
   const [storeName, setStoreName] = useState("");
-  const [businessType, setBusinessType] = useState("Jismoniy shaxs");
-  const [city, setCity] = useState("Toshkent shahri");
+  const [city, setCity] = useState("Xorazm");
   const [storeDescription, setStoreDescription] = useState("");
 
   const [forgotPhone, setForgotPhone] = useState("");
@@ -195,11 +196,14 @@ export default function AuthPage() {
         return;
       }
       if (user.role === "seller") {
-        navigate(paths.seller.dashboard);
+        navigate(paths.owner.dashboard);
         return;
       }
-      await refreshCartFav();
-      navigate(paths.account.root);
+      if (user.role === "specialist") {
+        navigate(paths.specialist.dashboard);
+        return;
+      }
+      setError("Bu kabinet faqat to'yxona egasi, mutaxassis va admin uchun");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Kirish muvaffaqiyatsiz");
     } finally {
@@ -223,35 +227,18 @@ export default function AuthPage() {
       return;
     }
 
-    if (role === "seller") {
-      setStep(2);
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const user = await registerAuthUser({
-        phone,
-        password: registerPassword,
-        role: "customer",
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-      });
-      setUser(user);
-      await refreshCartFav();
-      navigate(paths.account.root);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Ro'yxatdan o'tish muvaffaqiyatsiz");
-    } finally {
-      setLoading(false);
-    }
+    setStep(2);
   };
 
   const handleRegisterSeller = async () => {
     resetError();
     const phone = normalizePhone(registerPhone);
-    if (!storeName.trim()) {
-      setError("Do'kon nomini kiriting");
+    if (accountKind === "seller" && !storeName.trim()) {
+      setError("To'yxona egasi nomini kiriting");
+      return;
+    }
+    if (accountKind === "specialist" && !categoryId) {
+      setError("Yo'nalishni tanlang");
       return;
     }
 
@@ -260,17 +247,17 @@ export default function AuthPage() {
       const user = await registerAuthUser({
         phone,
         password: registerPassword,
-        role: "seller",
+        role: accountKind === "specialist" ? "specialist" : "seller",
         firstName: firstName.trim(),
         lastName: lastName.trim(),
-        storeName: storeName.trim(),
-        businessType,
+        storeName: storeName.trim() || `${firstName} ${lastName}`.trim(),
         city,
         description: storeDescription.trim() || undefined,
+        categoryId: accountKind === "specialist" ? categoryId : undefined,
       });
       setUser(user);
       await refreshCartFav();
-      navigate(paths.seller.dashboard);
+      navigate(user.role === "specialist" ? paths.specialist.dashboard : paths.owner.dashboard);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Ro'yxatdan o'tish muvaffaqiyatsiz");
     } finally {
@@ -295,7 +282,7 @@ export default function AuthPage() {
               <div>
                 <span className="mb-4 block h-1 w-10 rounded-full bg-gradient-to-r from-[#E5A818] to-[#00A86B]" />
                 <h1 className="text-[1.7rem] font-extrabold tracking-tight text-[#10231c]">Kabinetga kirish</h1>
-                <p className="mt-1 text-sm text-[#6d776f]">Sotuvchi va admin uchun</p>
+                <p className="mt-1 text-sm text-[#6d776f]">To&apos;yxona egasi, mutaxassis va admin uchun</p>
               </div>
 
               <div className="mt-7 space-y-4">
@@ -353,7 +340,7 @@ export default function AuthPage() {
               <div>
                 <span className="mb-4 block h-1 w-10 rounded-full bg-gradient-to-r from-[#E5A818] to-[#00A86B]" />
                 <h1 className="text-[1.7rem] font-extrabold tracking-tight text-[#10231c]">Ro&apos;yxatdan o&apos;tish</h1>
-                <p className="mt-1 text-sm text-[#6d776f]">Sotuvchi sifatida ro&apos;yxatdan o&apos;ting</p>
+                <p className="mt-1 text-sm text-[#6d776f]">To&apos;yxona egasi yoki mutaxassis sifatida</p>
               </div>
 
               <div className="mt-7 space-y-4">
@@ -420,53 +407,61 @@ export default function AuthPage() {
               </button>
               <div className="mt-4">
                 <span className="mb-4 block h-1 w-10 rounded-full bg-gradient-to-r from-[#E5A818] to-[#00A86B]" />
-                <h1 className="text-[1.7rem] font-extrabold tracking-tight text-[#10231c]">Biznes ma&apos;lumotlari</h1>
-                <p className="mt-1 text-sm text-[#6d776f]">Do&apos;koningiz haqida ma&apos;lumot bering</p>
+                <h1 className="text-[1.7rem] font-extrabold tracking-tight text-[#10231c]">Profil</h1>
+                <p className="mt-1 text-sm text-[#6d776f]">Kabinet turi va hududni tanlang</p>
               </div>
 
               <div className="mt-7 space-y-4">
-                <div>
-                  <FieldLabel>Do&apos;kon nomi</FieldLabel>
-                  <input
-                    value={storeName}
-                    onChange={e => { setStoreName(e.target.value); resetError(); }}
-                    placeholder="TechPlus Savdo"
-                    className={fieldClass}
-                  />
+                <div className="grid grid-cols-2 gap-2">
+                  <button type="button" onClick={() => setAccountKind("seller")} className={`rounded-2xl border px-3 py-2 text-sm font-semibold ${accountKind === "seller" ? "border-[#00A86B] bg-[#E8F8F1] text-[#008F5A]" : "border-transparent bg-white text-gray-500"}`}>
+                    To&apos;yxona egasi
+                  </button>
+                  <button type="button" onClick={() => setAccountKind("specialist")} className={`rounded-2xl border px-3 py-2 text-sm font-semibold ${accountKind === "specialist" ? "border-[#00A86B] bg-[#E8F8F1] text-[#008F5A]" : "border-transparent bg-white text-gray-500"}`}>
+                    Mutaxassis
+                  </button>
                 </div>
+                {accountKind === "seller" ? (
+                  <div>
+                    <FieldLabel>Brend nomi</FieldLabel>
+                    <input
+                      value={storeName}
+                      onChange={e => { setStoreName(e.target.value); resetError(); }}
+                      placeholder="Afsona to'yxonalari"
+                      className={fieldClass}
+                    />
+                  </div>
+                ) : (
+                  <div>
+                    <FieldLabel>Yo&apos;nalish</FieldLabel>
+                    <select value={categoryId} onChange={e => setCategoryId(e.target.value)} className={fieldClass}>
+                      <option value="host">Boshlovchi</option>
+                      <option value="photo">Fotograf</option>
+                      <option value="video">Videograf</option>
+                      <option value="dj">DJ</option>
+                      <option value="cortege">Kortej</option>
+                      <option value="decor">Dekor</option>
+                      <option value="makeup">Vizajist</option>
+                      <option value="artist">Artist</option>
+                    </select>
+                  </div>
+                )}
                 <div>
-                  <FieldLabel>Biznes turi</FieldLabel>
-                  <select
-                    value={businessType}
-                    onChange={e => setBusinessType(e.target.value)}
-                    className={fieldClass}
-                  >
-                    <option>Jismoniy shaxs</option>
-                    <option>Yakka tartibdagi tadbirkor (YaTT)</option>
-                    <option>Mas&apos;uliyati cheklangan jamiyat (MChJ)</option>
-                    <option>Aksiyadorlik jamiyati (AJ)</option>
-                  </select>
-                </div>
-                <div>
-                  <FieldLabel>Shahar/Viloyat</FieldLabel>
+                  <FieldLabel>Viloyat</FieldLabel>
                   <select
                     value={city}
                     onChange={e => setCity(e.target.value)}
                     className={fieldClass}
                   >
-                    <option>Toshkent shahri</option>
-                    <option>Samarqand</option>
-                    <option>Buxoro</option>
-                    <option>Andijon</option>
+                    {REGIONS.map(region => <option key={region}>{region}</option>)}
                   </select>
                 </div>
                 <div>
-                  <FieldLabel>Do&apos;kon tavsifi</FieldLabel>
+                  <FieldLabel>Qisqa tavsif</FieldLabel>
                   <textarea
                     rows={3}
                     value={storeDescription}
                     onChange={e => setStoreDescription(e.target.value)}
-                    placeholder="Do'koningiz haqida qisqacha..."
+                    placeholder="Xizmatlaringiz haqida..."
                     className={`${fieldClass} resize-none`}
                   />
                 </div>
@@ -475,7 +470,7 @@ export default function AuthPage() {
               {error && <p className="auth-error mt-3 text-sm text-red-500">{error}</p>}
 
               <button type="submit" disabled={loading} className="auth-submit mt-6 w-full rounded-2xl bg-[#E5A818] py-3.5 text-sm font-semibold text-[#063528] transition hover:bg-[#d39a12] disabled:cursor-not-allowed disabled:opacity-60">
-                {loading ? "Kutilmoqda..." : "Obunani tanlash →"}
+                {loading ? "Kutilmoqda..." : "Kabinetni ochish"}
               </button>
             </form>
           )}
